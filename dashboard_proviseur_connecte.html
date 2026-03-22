@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Académie des Maths — Dashboard Proviseur · Fourneyron</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0F1117; --surface:#181B24; --surface2:#1E2130; --surface3:#252A3A;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
+  --text:#F0EEE8; --text2:#8B8F9E; --text3:#555A6B;
+  --green:#2ECC8F; --green-d:#1A7A5E; --green-dim:rgba(46,204,143,0.12);
+  --amber:#F0A030; --amber-dim:rgba(240,160,48,0.12);
+  --red:#E05555; --red-dim:rgba(224,85,85,0.12);
+  --blue:#5B8DEF; --blue-dim:rgba(91,141,239,0.12);
+  --r:10px; --rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.75rem 1.25rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;}
+.sb-brand{display:flex;align-items:center;gap:10px;margin-bottom:2rem;}
+.sb-logo{width:32px;height:32px;border-radius:8px;background:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;}
+.sb-brand-text{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:.04em;line-height:1.3;}
+.sb-brand-text span{display:block;font-size:11px;font-weight:400;color:var(--text3);}
+.sb-section{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:1.25rem 0 .5rem;padding-left:10px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);cursor:pointer;transition:background .15s;font-size:13px;color:var(--text2);margin-bottom:2px;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:var(--surface3);color:var(--text);font-weight:500;}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.nav-item.active .nav-dot{background:var(--green);}
+.nav-alert-badge{margin-left:auto;background:var(--red-dim);color:var(--red);font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;display:none;}
+.sb-footer{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border);}
+.sb-user{display:flex;align-items:center;gap:10px;}
+.sb-avatar{width:32px;height:32px;border-radius:50%;background:var(--surface3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text2);flex-shrink:0;}
+.sb-user-info{font-size:12px;color:var(--text2);line-height:1.3;}
+.sb-user-info strong{display:block;font-size:12px;color:var(--text);font-weight:500;}
+
+/* MAIN */
+.main{padding:2rem 2.5rem;overflow-y:auto;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;}
+.topbar-left h1{font-size:20px;font-weight:600;margin-bottom:2px;}
+.topbar-left p{font-size:13px;color:var(--text2);}
+.sync-wrap{display:flex;align-items:center;gap:8px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.sync-dot.live{background:var(--green);animation:pulse 2s infinite;}
+.sync-dot.loading{background:var(--amber);animation:pulse .8s infinite;}
+.sync-dot.error{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.sync-text{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.btn-refresh{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 12px;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;}
+.btn-refresh:hover{background:var(--surface2);color:var(--text);}
+
+/* SECTIONS */
+.section{display:none;animation:fadeIn .3s ease;}
+.section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.1rem 1.25rem;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--rl) var(--rl) 0 0;}
+.kpi-card.green::before{background:var(--green);}
+.kpi-card.amber::before{background:var(--amber);}
+.kpi-card.red::before{background:var(--red);}
+.kpi-card.blue::before{background:var(--blue);}
+.kpi-label{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-bottom:.5rem;}
+.kpi-value{font-size:28px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);line-height:1;margin-bottom:.35rem;transition:all .4s;}
+.kpi-sub{font-size:11px;color:var(--text3);}
+
+/* PANEL */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.panel-title{font-size:13px;font-weight:600;color:var(--text);}
+.panel-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.panel-badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500;}
+.pb-green{background:var(--green-dim);color:var(--green);}
+.pb-amber{background:var(--amber-dim);color:var(--amber);}
+.pb-red{background:var(--red-dim);color:var(--red);}
+.pb-gray{background:var(--surface3);color:var(--text3);}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:0 12px 10px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:11px 12px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+.td-name{color:var(--text);font-weight:500;}
+.td-mono{font-family:'DM Mono',monospace;font-size:12px;}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.pill::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.pill-green{background:var(--green-dim);color:var(--green);}
+.pill-green::before{background:var(--green);}
+.pill-amber{background:var(--amber-dim);color:var(--amber);}
+.pill-amber::before{background:var(--amber);}
+.pill-red{background:var(--red-dim);color:var(--red);}
+.pill-red::before{background:var(--red);}
+.pill-gray{background:var(--surface3);color:var(--text3);}
+.pill-gray::before{background:var(--text3);}
+
+/* EMPTY */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 2rem;text-align:center;}
+.empty-icon{font-size:28px;margin-bottom:.75rem;opacity:.4;}
+.empty-title{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:.35rem;}
+.empty-sub{font-size:12px;color:var(--text3);max-width:320px;line-height:1.55;}
+
+/* HEATMAP */
+.heatmap-grid{display:flex;flex-direction:column;gap:5px;}
+.heatmap-header{display:grid;gap:5px;align-items:center;}
+.heatmap-row{display:grid;gap:5px;align-items:center;}
+.hm-label{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hm-head{font-size:10px;color:var(--text3);text-align:center;font-weight:500;}
+.hm-cell{height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;font-weight:500;transition:transform .15s;background:var(--surface3);color:var(--text3);}
+.hm-cell:hover{transform:scale(1.08);}
+.hm-cell.c-empty{opacity:.25;}
+.hm-cell.c-good{background:var(--green-dim);color:var(--green);border:1px solid rgba(46,204,143,.25);}
+.hm-cell.c-mid{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(240,160,48,.25);}
+.hm-cell.c-bad{background:var(--red-dim);color:var(--red);border:1px solid rgba(224,85,85,.25);}
+
+/* PROF ROW */
+.prof-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.prof-row:last-child{border-bottom:none;}
+.prof-info{display:flex;align-items:center;gap:10px;}
+.prof-av{width:30px;height:30px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--text2);flex-shrink:0;}
+.prof-name{font-size:13px;font-weight:500;color:var(--text);}
+.prof-meta{font-size:11px;color:var(--text3);}
+.prof-stats{display:flex;gap:16px;align-items:center;}
+.ps-val{font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text3);text-align:right;}
+.ps-lbl{font-size:10px;color:var(--text3);text-align:right;}
+
+/* ALERTE ROW */
+.alerte-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:fadeIn .3s ease;}
+.alerte-row.urgent{border-left:3px solid var(--red);}
+.alerte-info{flex:1;}
+.alerte-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.alerte-detail{font-size:11px;color:var(--text3);}
+.alerte-time{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);white-space:nowrap;}
+
+/* STAT ROW */
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+.stat-row:last-child{border-bottom:none;}
+.stat-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);}
+.stat-dot{width:8px;height:8px;border-radius:50%;}
+.stat-val{font-size:13px;font-family:'DM Mono',monospace;color:var(--text2);}
+
+/* LOADING */
+.skeleton{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">A</div>
+    <div class="sb-brand-text">Académie des Maths<span>Lycée Benoit Fourneyron</span></div>
+  </div>
+  <div class="sb-section">Navigation</div>
+  <nav>
+    <div class="nav-item active" onclick="showSection('vue-globale',this)"><div class="nav-dot"></div>Vue globale</div>
+    <div class="nav-item" onclick="showSection('alertes',this)"><div class="nav-dot"></div>Alertes<span class="nav-alert-badge" id="alert-badge">0</span></div>
+    <div class="nav-item" onclick="showSection('classes',this)"><div class="nav-dot"></div>Classes</div>
+    <div class="nav-item" onclick="showSection('lacunes',this)"><div class="nav-dot"></div>Lacunes</div>
+    <div class="nav-item" onclick="showSection('profs',this)"><div class="nav-dot"></div>Professeurs</div>
+    <div class="nav-item" onclick="showSection('eleves',this)"><div class="nav-dot"></div>Élèves</div>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-avatar">PV</div>
+      <div class="sb-user-info"><strong>Proviseur</strong>Lycée Fourneyron</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Tableau de bord</h1>
+      <p>Académie des Maths · Lycée Benoit Fourneyron · Saint-Étienne</p>
+    </div>
+    <div class="sync-wrap">
+      <div class="sync-dot loading" id="sync-dot"></div>
+      <span class="sync-text" id="sync-text">Chargement...</span>
+      <button class="btn-refresh" onclick="loadData()">↻ Actualiser</button>
+    </div>
+  </div>
+
+  <!-- VUE GLOBALE -->
+  <div class="section active" id="vue-globale">
+    <div class="kpi-grid">
+      <div class="kpi-card green"><div class="kpi-label">Élèves suivis</div><div class="kpi-value" id="kpi-eleves">—</div><div class="kpi-sub">Ayant tenté ≥ 1 fiche</div></div>
+      <div class="kpi-card blue"><div class="kpi-label">Taux de validation</div><div class="kpi-value" id="kpi-taux">—</div><div class="kpi-sub">Fiches validées / tentées</div></div>
+      <div class="kpi-card amber"><div class="kpi-label">Fiches en cours</div><div class="kpi-value" id="kpi-encours">—</div><div class="kpi-sub">Statut "en_cours"</div></div>
+      <div class="kpi-card red"><div class="kpi-label">Alertes actives</div><div class="kpi-value" id="kpi-alertes">—</div><div class="kpi-sub">3 tentatives échouées</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">Activité récente</div><div class="panel-sub">10 derniers événements</div></div>
+          <span class="panel-badge pb-gray" id="badge-activite">—</span>
+        </div>
+        <div id="activite-list"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Aucune activité</div><div class="empty-sub">Les événements apparaîtront ici dès que les élèves utiliseront les fiches.</div></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">Répartition des statuts</div><div class="panel-sub">Toutes fiches · Toutes classes</div></div>
+        </div>
+        <div class="stat-row"><div class="stat-label"><div class="stat-dot" style="background:var(--green);"></div>Validées</div><div class="stat-val" id="stat-valide">—</div></div>
+        <div class="stat-row"><div class="stat-label"><div class="stat-dot" style="background:var(--amber);"></div>En cours</div><div class="stat-val" id="stat-encours">—</div></div>
+        <div class="stat-row"><div class="stat-label"><div class="stat-dot" style="background:var(--red);"></div>Échec 3 tentatives</div><div class="stat-val" id="stat-echec">—</div></div>
+        <div class="stat-row"><div class="stat-label"><div class="stat-dot" style="background:var(--text3);"></div>Non commencées</div><div class="stat-val" id="stat-noncom">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTES -->
+  <div class="section" id="alertes">
+    <div style="margin-bottom:1.25rem;"><h2 style="font-size:17px;font-weight:600;margin-bottom:3px;">Alertes</h2><p style="font-size:13px;color:var(--text2);">Élèves ayant échoué 3 fois — intervention du professeur requise sous 48h.</p></div>
+    <div class="panel" style="margin-bottom:12px;">
+      <div class="panel-header"><div><div class="panel-title">Alertes non traitées</div><div class="panel-sub">Intervention requise</div></div><span class="panel-badge pb-red" id="badge-alertes-non">0 alerte</span></div>
+      <div id="alertes-non-list"><div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-title">Aucune alerte active</div><div class="empty-sub">Les alertes apparaîtront ici quand un élève échouera 3 fois sur une même fiche.</div></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div><div class="panel-title">Alertes traitées</div><div class="panel-sub">Interventions effectuées</div></div><span class="panel-badge pb-green" id="badge-alertes-oui">0 traitée</span></div>
+      <div id="alertes-oui-list"><div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">Aucune intervention enregistrée</div><div class="empty-sub">L'historique des interventions apparaîtra ici.</div></div></div>
+    </div>
+  </div>
+
+  <!-- CLASSES -->
+  <div class="section" id="classes">
+    <div style="margin-bottom:1.25rem;"><h2 style="font-size:17px;font-weight:600;margin-bottom:3px;">Classes</h2><p style="font-size:13px;color:var(--text2);">Comparaison des classes · Taux de validation et alertes.</p></div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Toutes les classes</div><span class="panel-badge pb-gray" id="badge-classes">—</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Classe</th><th>Élèves actifs</th><th>Fiches tentées</th><th>Taux validation</th><th>Alertes actives</th><th>Statut</th></tr></thead>
+          <tbody id="classes-tbody"><tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text3);">Aucune donnée disponible.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- LACUNES -->
+  <div class="section" id="lacunes">
+    <div style="margin-bottom:1.25rem;"><h2 style="font-size:17px;font-weight:600;margin-bottom:3px;">Carte des lacunes</h2><p style="font-size:13px;color:var(--text2);">Taux d'échec par fiche. Plus la cellule est rouge, plus la lacune est répandue.</p></div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Heatmap · Fiches × Classes</div><span class="panel-badge pb-gray">Taux d'échec</span></div>
+      <div id="heatmap-wrap"><div class="empty-state"><div class="empty-icon">🗺️</div><div class="empty-title">Aucune donnée</div><div class="empty-sub">La heatmap se construira au fur et à mesure des résultats.</div></div></div>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+        <span style="font-size:11px;color:var(--text3);">Légende :</span>
+        <div style="display:flex;align-items:center;gap:5px;"><div style="width:16px;height:16px;border-radius:3px;background:var(--green-dim);border:1px solid rgba(46,204,143,.3);"></div><span style="font-size:11px;color:var(--text3);">&lt;20% échec</span></div>
+        <div style="display:flex;align-items:center;gap:5px;"><div style="width:16px;height:16px;border-radius:3px;background:var(--amber-dim);border:1px solid rgba(240,160,48,.3);"></div><span style="font-size:11px;color:var(--text3);">20–50%</span></div>
+        <div style="display:flex;align-items:center;gap:5px;"><div style="width:16px;height:16px;border-radius:3px;background:var(--red-dim);border:1px solid rgba(224,85,85,.3);"></div><span style="font-size:11px;color:var(--text3);">&gt;50%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFS -->
+  <div class="section" id="profs">
+    <div style="margin-bottom:1.25rem;"><h2 style="font-size:17px;font-weight:600;margin-bottom:3px;">Professeurs</h2><p style="font-size:13px;color:var(--text2);">Suivi des alertes par professeur.</p></div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Équipe pédagogique · Mathématiques</div><span class="panel-badge pb-gray">6 professeurs</span></div>
+      <div id="profs-list"></div>
+    </div>
+  </div>
+
+  <!-- ÉLÈVES -->
+  <div class="section" id="eleves">
+    <div style="margin-bottom:1.25rem;"><h2 style="font-size:17px;font-weight:600;margin-bottom:3px;">Élèves</h2><p style="font-size:13px;color:var(--text2);">Vue individuelle · Toutes classes.</p></div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Tous les élèves</div><span class="panel-badge pb-gray" id="badge-eleves">—</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Élève</th><th>Classe</th><th>Professeur</th><th>Fiches tentées</th><th>Fiches validées</th><th>Dernière activité</th><th>Statut</th></tr></thead>
+          <tbody id="eleves-tbody"><tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text3);">Aucune donnée disponible.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlBMjVXIg58lsopoeQ5sEZW-jcQIOrOtnWwCGVtHLGjcmpi9exaYZ3oAEre4deZum2/exec";
+var ETABLISSEMENT = "Fourneyron";
+
+var PROFS = [
+  { nom: "Arnaud Reydellet",  initiales: "AR" },
+  { nom: "Mimoun Ourourou",   initiales: "MO" },
+  { nom: "Alhem Soltani",     initiales: "AS" },
+  { nom: "Lyazid Sayad",      initiales: "LS" },
+  { nom: "Hamza Ghardane",    initiales: "HG" },
+  { nom: "Lahcen El-Ourzaz",  initiales: "LE" }
+];
+
+var DATA = [];
+
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+function setSyncState(state, text) {
+  var dot = document.getElementById('sync-dot');
+  dot.className = 'sync-dot ' + state;
+  document.getElementById('sync-text').textContent = text;
+}
+
+function loadData() {
+  setSyncState('loading', 'Chargement...');
+  var url = SCRIPT_URL + "?etablissement=" + ETABLISSEMENT + "&type=remediation&t=" + Date.now();
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(json){
+      if(json.status === "ok") {
+        DATA = json.data || [];
+        renderAll();
+        setSyncState('live', 'Synchronisé · ' + new Date().toLocaleTimeString('fr-FR'));
+      } else {
+        setSyncState('error', 'Erreur de chargement');
+      }
+    })
+    .catch(function(){
+      setSyncState('error', 'Impossible de contacter le serveur');
+    });
+}
+
+function renderAll() {
+  renderKPIs();
+  renderActivite();
+  renderStatuts();
+  renderAlertes();
+  renderClasses();
+  renderHeatmap();
+  renderProfs();
+  renderEleves();
+}
+
+/* ── KPIs ── */
+function renderKPIs() {
+  var elevesUniques = unique(DATA.map(function(r){ return r.eleve_id; })).length;
+  var tentees = DATA.length;
+  var validees = DATA.filter(function(r){ return r.statut === 'valide'; }).length;
+  var enCours = DATA.filter(function(r){ return r.statut === 'en_cours'; }).length;
+  var alertes = DATA.filter(function(r){ return r.statut === 'echec_3_tentatives' && r.alerte_traitee === 'non'; }).length;
+  var taux = tentees > 0 ? Math.round(validees / tentees * 100) + '%' : '—';
+
+  document.getElementById('kpi-eleves').textContent = elevesUniques || '—';
+  document.getElementById('kpi-taux').textContent = taux;
+  document.getElementById('kpi-encours').textContent = enCours || '—';
+  document.getElementById('kpi-alertes').textContent = alertes || '—';
+
+  if(alertes > 0) {
+    var badge = document.getElementById('alert-badge');
+    badge.textContent = alertes;
+    badge.style.display = 'inline-block';
+  }
+}
+
+/* ── ACTIVITÉ RÉCENTE ── */
+function renderActivite() {
+  var list = document.getElementById('activite-list');
+  if(DATA.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Aucune activité</div><div class="empty-sub">Les événements apparaîtront ici dès que les élèves utiliseront les fiches.</div></div>';
+    document.getElementById('badge-activite').textContent = '0 événement';
+    return;
+  }
+  var recent = DATA.slice().reverse().slice(0, 10);
+  document.getElementById('badge-activite').textContent = DATA.length + ' événement' + (DATA.length > 1 ? 's' : '');
+  list.innerHTML = recent.map(function(r){
+    var pill = statutPill(r.statut);
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);">' +
+      '<div><div style="font-size:13px;font-weight:500;color:var(--text);">' + esc(r.eleve_nom) + '</div>' +
+      '<div style="font-size:11px;color:var(--text3);">' + esc(r.fiche_id) + ' · ' + esc(r.classe) + '</div></div>' +
+      '<div style="display:flex;align-items:center;gap:10px;">' + pill +
+      '<span style="font-size:10px;font-family:DM Mono,monospace;color:var(--text3);">' + esc(r.timestamp) + '</span></div></div>';
+  }).join('');
+}
+
+/* ── STATUTS ── */
+function renderStatuts() {
+  var valide = DATA.filter(function(r){ return r.statut==='valide'; }).length;
+  var encours = DATA.filter(function(r){ return r.statut==='en_cours'; }).length;
+  var echec = DATA.filter(function(r){ return r.statut==='echec_3_tentatives'; }).length;
+  document.getElementById('stat-valide').textContent = valide || '—';
+  document.getElementById('stat-encours').textContent = encours || '—';
+  document.getElementById('stat-echec').textContent = echec || '—';
+  document.getElementById('stat-noncom').textContent = '—';
+}
+
+/* ── ALERTES ── */
+function renderAlertes() {
+  var non = DATA.filter(function(r){ return r.statut==='echec_3_tentatives' && r.alerte_traitee==='non'; });
+  var oui = DATA.filter(function(r){ return r.statut==='echec_3_tentatives' && r.alerte_traitee==='oui'; });
+
+  document.getElementById('badge-alertes-non').textContent = non.length + ' alerte' + (non.length>1?'s':'');
+  document.getElementById('badge-alertes-oui').textContent = oui.length + ' traitée' + (oui.length>1?'s':'');
+
+  var listNon = document.getElementById('alertes-non-list');
+  if(non.length === 0) {
+    listNon.innerHTML = '<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-title">Aucune alerte active</div><div class="empty-sub">Tout va bien — aucun élève bloqué pour l\'instant.</div></div>';
+  } else {
+    listNon.innerHTML = non.map(function(r){
+      return '<div class="alerte-row urgent">' +
+        '<div class="alerte-info">' +
+        '<div class="alerte-name">' + esc(r.eleve_nom) + ' <span style="font-weight:400;color:var(--text3);">— ' + esc(r.classe) + '</span></div>' +
+        '<div class="alerte-detail">Fiche : ' + esc(r.fiche_id) + ' · Prof : ' + esc(r.prof) + '</div></div>' +
+        '<div style="text-align:right;"><div class="alerte-time">' + esc(r.timestamp) + '</div>' +
+        '<span class="pill pill-red" style="margin-top:4px;">Non traitée</span></div></div>';
+    }).join('');
+  }
+
+  var listOui = document.getElementById('alertes-oui-list');
+  if(oui.length === 0) {
+    listOui.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">Aucune intervention enregistrée</div><div class="empty-sub">L\'historique apparaîtra ici.</div></div>';
+  } else {
+    listOui.innerHTML = oui.map(function(r){
+      return '<div class="alerte-row">' +
+        '<div class="alerte-info">' +
+        '<div class="alerte-name">' + esc(r.eleve_nom) + ' <span style="font-weight:400;color:var(--text3);">— ' + esc(r.classe) + '</span></div>' +
+        '<div class="alerte-detail">Fiche : ' + esc(r.fiche_id) + ' · Prof : ' + esc(r.prof) + '</div></div>' +
+        '<span class="pill pill-green">Traitée</span></div>';
+    }).join('');
+  }
+}
+
+/* ── CLASSES ── */
+function renderClasses() {
+  var classes = {};
+  DATA.forEach(function(r){
+    if(!r.classe) return;
+    if(!classes[r.classe]) classes[r.classe] = { eleves:[], tentees:0, validees:0, alertes:0, prof:r.prof };
+    if(classes[r.classe].eleves.indexOf(r.eleve_id) === -1) classes[r.classe].eleves.push(r.eleve_id);
+    classes[r.classe].tentees++;
+    if(r.statut === 'valide') classes[r.classe].validees++;
+    if(r.statut === 'echec_3_tentatives' && r.alerte_traitee === 'non') classes[r.classe].alertes++;
+  });
+
+  var keys = Object.keys(classes);
+  document.getElementById('badge-classes').textContent = keys.length + ' classe' + (keys.length>1?'s':'');
+
+  var tbody = document.getElementById('classes-tbody');
+  if(keys.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text3);">Aucune donnée disponible.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = keys.sort().map(function(cl){
+    var c = classes[cl];
+    var taux = c.tentees > 0 ? Math.round(c.validees/c.tentees*100)+'%' : '—';
+    var statut = c.alertes > 0
+      ? '<span class="pill pill-red">'+c.alertes+' alerte'+(c.alertes>1?'s':'')+'</span>'
+      : '<span class="pill pill-green">OK</span>';
+    return '<tr>' +
+      '<td class="td-name">' + esc(cl) + '</td>' +
+      '<td class="td-mono">' + c.eleves.length + '</td>' +
+      '<td class="td-mono">' + c.tentees + '</td>' +
+      '<td class="td-mono">' + taux + '</td>' +
+      '<td class="td-mono">' + c.alertes + '</td>' +
+      '<td>' + statut + '</td></tr>';
+  }).join('');
+}
+
+/* ── HEATMAP ── */
+function renderHeatmap() {
+  var wrap = document.getElementById('heatmap-wrap');
+  var classes = unique(DATA.map(function(r){ return r.classe; })).filter(Boolean).sort();
+  var fiches = unique(DATA.map(function(r){ return r.fiche_id; })).filter(Boolean).sort();
+
+  if(classes.length === 0 || fiches.length === 0) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">🗺️</div><div class="empty-title">Aucune donnée</div><div class="empty-sub">La heatmap se construira au fur et à mesure des résultats.</div></div>';
+    return;
+  }
+
+  var cols = 'grid-template-columns: 160px repeat(' + classes.length + ', 1fr);';
+  var html = '<div class="heatmap-grid">';
+  html += '<div class="heatmap-header" style="' + cols + '">';
+  html += '<div></div>';
+  classes.forEach(function(cl){ html += '<div class="hm-head">' + esc(cl) + '</div>'; });
+  html += '</div>';
+
+  fiches.forEach(function(fiche){
+    html += '<div class="heatmap-row" style="' + cols + '">';
+    html += '<div class="hm-label">' + esc(fiche) + '</div>';
+    classes.forEach(function(cl){
+      var total = DATA.filter(function(r){ return r.fiche_id===fiche && r.classe===cl; }).length;
+      var echecs = DATA.filter(function(r){ return r.fiche_id===fiche && r.classe===cl && r.statut==='echec_3_tentatives'; }).length;
+      if(total === 0) {
+        html += '<div class="hm-cell c-empty">—</div>';
+      } else {
+        var pct = Math.round(echecs/total*100);
+        var cls = pct < 20 ? 'c-good' : pct < 50 ? 'c-mid' : 'c-bad';
+        html += '<div class="hm-cell ' + cls + '">' + pct + '%</div>';
+      }
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+/* ── PROFS ── */
+function renderProfs() {
+  var list = document.getElementById('profs-list');
+  list.innerHTML = PROFS.map(function(p){
+    var alertes = DATA.filter(function(r){ return r.prof === p.nom && r.statut === 'echec_3_tentatives' && r.alerte_traitee === 'non'; }).length;
+    var traitees = DATA.filter(function(r){ return r.prof === p.nom && r.statut === 'echec_3_tentatives' && r.alerte_traitee === 'oui'; }).length;
+    var statut = alertes > 0
+      ? '<span class="pill pill-amber">' + alertes + ' en attente</span>'
+      : '<span class="pill pill-green">RAS</span>';
+    return '<div class="prof-row">' +
+      '<div class="prof-info"><div class="prof-av">' + p.initiales + '</div>' +
+      '<div><div class="prof-name">' + p.nom + '</div>' +
+      '<div class="prof-meta">Alertes reçues : ' + (alertes+traitees) + '</div></div></div>' +
+      '<div class="prof-stats">' +
+      '<div><div class="ps-val">' + (alertes||'—') + '</div><div class="ps-lbl">En attente</div></div>' +
+      '<div><div class="ps-val">' + (traitees||'—') + '</div><div class="ps-lbl">Traitées</div></div>' +
+      statut + '</div></div>';
+  }).join('');
+}
+
+/* ── ÉLÈVES ── */
+function renderEleves() {
+  var elevesMap = {};
+  DATA.forEach(function(r){
+    if(!r.eleve_id) return;
+    if(!elevesMap[r.eleve_id]) elevesMap[r.eleve_id] = { nom:r.eleve_nom, classe:r.classe, prof:r.prof, tentees:0, validees:0, derniere:r.timestamp, alertes:0 };
+    elevesMap[r.eleve_id].tentees++;
+    if(r.statut==='valide') elevesMap[r.eleve_id].validees++;
+    if(r.statut==='echec_3_tentatives') elevesMap[r.eleve_id].alertes++;
+    elevesMap[r.eleve_id].derniere = r.timestamp;
+  });
+
+  var keys = Object.keys(elevesMap);
+  document.getElementById('badge-eleves').textContent = keys.length + ' élève' + (keys.length>1?'s':'');
+
+  var tbody = document.getElementById('eleves-tbody');
+  if(keys.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text3);">Aucun élève actif pour l\'instant.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = keys.sort().map(function(id){
+    var e = elevesMap[id];
+    var statut = e.alertes > 0
+      ? '<span class="pill pill-red">Alerte</span>'
+      : e.validees === e.tentees && e.tentees > 0
+        ? '<span class="pill pill-green">À jour</span>'
+        : '<span class="pill pill-amber">En cours</span>';
+    return '<tr>' +
+      '<td class="td-name">' + esc(e.nom) + '</td>' +
+      '<td>' + esc(e.classe) + '</td>' +
+      '<td>' + esc(e.prof) + '</td>' +
+      '<td class="td-mono">' + e.tentees + '</td>' +
+      '<td class="td-mono">' + e.validees + '</td>' +
+      '<td class="td-mono">' + esc(e.derniere) + '</td>' +
+      '<td>' + statut + '</td></tr>';
+  }).join('');
+}
+
+/* ── UTILS ── */
+function unique(arr){ return arr.filter(function(v,i,a){ return a.indexOf(v)===i; }); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function statutPill(s){
+  if(s==='valide') return '<span class="pill pill-green">Validé</span>';
+  if(s==='en_cours') return '<span class="pill pill-amber">En cours</span>';
+  if(s==='echec_3_tentatives') return '<span class="pill pill-red">Échec</span>';
+  return '<span class="pill pill-gray">' + esc(s) + '</span>';
+}
+
+/* ── INIT ── */
+loadData();
+setInterval(loadData, 60000);
+</script>
+</body>
+</html>
